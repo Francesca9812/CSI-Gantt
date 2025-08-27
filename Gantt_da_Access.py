@@ -10,7 +10,13 @@ import random
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+try:
+    response = supabase.table("qry_run_progetti_pub").select("*").execute()
+    print("Dati ricevuti:", response.data)
+except Exception as e:
+    print("Errore Supabase:", e)
 
 @st.cache_data(ttl=60)  # TTL opzionale, in secondi
 def load_data():
