@@ -43,22 +43,18 @@ giorni_festivi = {
 
 @st.cache_data
 def load_data():
-    # Esegui la query
     limit = 1000
     offset = 0
     rows = []
-    
+
     while True:
         result = supabase.table("tbl_run_progetti").select("*").range(offset, offset + limit - 1).execute()
         if not result.data:
             break
         rows.extend(result.data)
         offset += limit
-    
+
     df = pd.DataFrame(rows)
-    
-    # Trasforma in DataFrame
-    df = pd.DataFrame(data.data)
 
     # parsing e pulizia come prima
     df['Data_svolgimento'] = pd.to_datetime(df['Data_svolgimento'], errors='coerce')
