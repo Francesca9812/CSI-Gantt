@@ -55,7 +55,7 @@ def load_data():
         rows.extend(result.data)
         offset += limit
     
-    df = pd.DataFrame(rows))
+    df = pd.DataFrame(rows)
     
     # Trasforma in DataFrame
     df = pd.DataFrame(data.data)
