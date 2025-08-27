@@ -15,7 +15,7 @@ from supabase import create_client
 import os
 
 
-# Carica le variabili dal file pw.env
+# Carica le variabili da secrets di streamlite
 SUPABASE_URL = st.secrets["SUPABASE_URL"]
 SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
 
