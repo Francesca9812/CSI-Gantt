@@ -19,13 +19,6 @@ import os
 SUPABASE_URL = st.secrets["SUPABASE_URL"]
 SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
 
-# SUPABASE_URL="https://ssquhsoqwiqdkugojwnx.supabase.co"
-# SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzcXVoc29xd2lxZGt1Z29qd254Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NjI4NTYxNCwiZXhwIjoyMDcxODYxNjE0fQ.38kKgxmEL2gsD-XxhlzgO2BA3ngw2ZfiQkX4Uqx77J8"
-
-
-print("SUPABASE_URL =", SUPABASE_URL)  # per controllare
-print("SUPABASE_KEY =", SUPABASE_KEY)  # per controllare
-
 from supabase import create_client
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
@@ -52,13 +45,9 @@ giorni_festivi = {
 def load_data():
     # Esegui la query
     data = supabase.table("tbl_run_progetti").select("*").execute()
-    data = supabase.table("tbl_run_progetti").select("*").execute()
-    st.write("Raw data:", data)
     
     # Trasforma in DataFrame
     df = pd.DataFrame(data.data)
-    st.write("Colonne disponibili nel DataFrame:")
-    st.write(df.columns)
 
     # parsing e pulizia come prima
     df['Data_svolgimento'] = pd.to_datetime(df['Data_svolgimento'], errors='coerce')
@@ -72,7 +61,7 @@ df = load_data()
 
 # --- Pulsante Aggiorna dati ---
 if st.button("Aggiorna dati"):
-    st.cache_data.clear()  # svuota la cache dei dati
+    st.cache.clear()  # svuota la cache dei dati
     df = load_data()        # ricarica dati aggiornati
     st.rerun() # ricarica tutta la pagina
 
