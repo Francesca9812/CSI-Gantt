@@ -41,7 +41,7 @@ giorni_festivi = {
 
 # --- Caricamento dati da Supabase ---
 
-@st.cache(ttl=60)
+@st.cache_data
 def load_data():
     # Esegui la query
     data = supabase.table("tbl_run_progetti").select("*").execute()
