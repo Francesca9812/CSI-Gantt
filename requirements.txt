@@ -1,5 +1,6 @@
-streamlit>=1.30.0
+streamlit
 pandas
-beautifulsoup4
 altair
+beautifulsoup4
+python-dotenv
 supabase
