@@ -15,7 +15,7 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 @st.cache_data(ttl=60)  # TTL opzionale, in secondi
 def load_data():
     # Esegui la query
-    data = supabase.table("qry_run_progetti").select("*").execute()
+    data = supabase.table("qry_run_progetti_pub").select("*").execute()
     
     # Trasforma in DataFrame
     df = pd.DataFrame(data.data)
