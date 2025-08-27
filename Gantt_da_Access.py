@@ -16,11 +16,11 @@ import os
 
 
 # Carica le variabili dal file pw.env
-SUPABASE_URL = os.environ["SUPABASE_URL"]
-SUPABASE_KEY = os.environ["SUPABASE_KEY"]
+# SUPABASE_URL = os.environ["SUPABASE_URL"]
+# SUPABASE_KEY = os.environ["SUPABASE_KEY"]
 
-# SUPABASE_URL="https://ssquhsoqwiqdkugojwnx.supabase.co"
-# SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzcXVoc29xd2lxZGt1Z29qd254Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NjI4NTYxNCwiZXhwIjoyMDcxODYxNjE0fQ.38kKgxmEL2gsD-XxhlzgO2BA3ngw2ZfiQkX4Uqx77J8"
+SUPABASE_URL="https://ssquhsoqwiqdkugojwnx.supabase.co"
+SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzcXVoc29xd2lxZGt1Z29qd254Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NjI4NTYxNCwiZXhwIjoyMDcxODYxNjE0fQ.38kKgxmEL2gsD-XxhlzgO2BA3ngw2ZfiQkX4Uqx77J8"
 
 
 print("SUPABASE_URL =", SUPABASE_URL)  # per controllare
