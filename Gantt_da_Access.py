@@ -21,7 +21,7 @@ except Exception as e:
 @st.cache_data(ttl=60)  # TTL opzionale, in secondi
 def load_data():
     # Esegui la query
-    data = supabase.table("qry_run_progetti_pub").select("*").execute()
+    data = supabase.table("tbl_run_progetti").select("*").execute()
     
     # Trasforma in DataFrame
     df = pd.DataFrame(data.data)
