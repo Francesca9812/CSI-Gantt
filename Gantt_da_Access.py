@@ -7,7 +7,7 @@ SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-@st.data(ttl=60)
+@st.cache(ttl=60)
 def load_data():
     # Esegui la query
     data = supabase.table("qry_run_progetti").select("*").execute()
