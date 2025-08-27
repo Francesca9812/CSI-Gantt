@@ -1,35 +1,68 @@
-from supabase import create_client, Client
-import os
+# python -m streamlit run "C:/Users/francesca.pittoni/OneDrive - IMQ GROUP/Documenti/CSI-Gantt/Gantt_da_Access.py"
+
+# Gantt_da_Supabase.py
+
 import streamlit as st
-import pandas as pd
-from bs4 import BeautifulSoup
 import html
+import pandas as pd
 import random
+import streamlit.components.v1 as components
+import altair as alt
+from bs4 import BeautifulSoup
+import os
+from dotenv import load_dotenv
+from supabase import create_client
+import os
 
-# Leggi URL e chiave dal tuo environment o da variabili segrete Streamlit
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
+# Carica le variabili dal file pw.env
+SUPABASE_URL = os.environ["SUPABASE_URL"]
+SUPABASE_KEY = os.environ["SUPABASE_KEY"]
+
+# SUPABASE_URL="https://ssquhsoqwiqdkugojwnx.supabase.co"
+# SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNzcXVoc29xd2lxZGt1Z29qd254Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NjI4NTYxNCwiZXhwIjoyMDcxODYxNjE0fQ.38kKgxmEL2gsD-XxhlzgO2BA3ngw2ZfiQkX4Uqx77J8"
+
+
+print("SUPABASE_URL =", SUPABASE_URL)  # per controllare
+print("SUPABASE_KEY =", SUPABASE_KEY)  # per controllare
+
+from supabase import create_client
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-try:
-    response = supabase.table("qry_run_progetti_pub").select("*").execute()
-    print("Dati ricevuti:", response.data)
-except Exception as e:
-    print("Errore Supabase:", e)
+# --- Configurazione pagina ---
+st.set_page_config(layout="wide")
+oggi = pd.Timestamp.today().normalize()
 
-@st.cache_data(ttl=60)  # TTL opzionale, in secondi
+# --- Giorni festivi ---
+giorni_festivi = {
+    pd.Timestamp("2025-01-01"),
+    pd.Timestamp("2025-04-21"),
+    pd.Timestamp("2025-04-25"),
+    pd.Timestamp("2025-05-01"),
+    pd.Timestamp("2025-06-02"),
+    pd.Timestamp("2025-08-15"),
+    pd.Timestamp("2025-11-01"),
+    pd.Timestamp("2025-12-25"),
+    pd.Timestamp("2025-12-26"),
+}
+
+# --- Caricamento dati da Supabase ---
+
+@st.cache(ttl=60)
 def load_data():
     # Esegui la query
     data = supabase.table("tbl_run_progetti").select("*").execute()
+    data = supabase.table("tbl_run_progetti").select("*").execute()
+    st.write("Raw data:", data)
     
     # Trasforma in DataFrame
     df = pd.DataFrame(data.data)
+    st.write("Colonne disponibili nel DataFrame:")
+    st.write(df.columns)
 
     # parsing e pulizia come prima
     df['Data_svolgimento'] = pd.to_datetime(df['Data_svolgimento'], errors='coerce')
     df['Scenario'] = df['Scenario'].astype(str).str.strip()
-    df['Macro_scenario'] = df['Macro_scenario'].astype(str).str.strip()
     df['Stato'] = df['Stato'].astype(str).str.strip()
     df['ID_Progetto'] = df['ID_Progetto'].astype(str).str.strip()
     df['Pista'] = df['Pista'].astype(str).str.strip()
