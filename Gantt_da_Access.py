@@ -1,5 +1,10 @@
 from supabase import create_client, Client
 import os
+import streamlit as st
+import pandas as pd
+from bs4 import BeautifulSoup
+import html
+import random
 
 # Leggi URL e chiave dal tuo environment o da variabili segrete Streamlit
 SUPABASE_URL = os.getenv("SUPABASE_URL")
