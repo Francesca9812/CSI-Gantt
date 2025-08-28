@@ -96,6 +96,7 @@ df_inizio = (
 # dizionario con data inizio per ordinare i progetti
 inizio_progetto = dict(zip(df_inizio["ID_Progetto"].astype(str), df_inizio["Data_inizio_proj"]))
 
+
 # --- Funzioni di supporto ---
 def get_color(progetto_id):
     # colore stabile per ID_Progetto
@@ -229,6 +230,34 @@ def build_pivot_progetti_solo_scenario(df):
     )
     return pivot
 
+def get_project_start_dates(df):
+    setup_mask = df['Scenario'].str.contains("Setup\(OR\)|Setup\(Pretest\)", regex=True, case=False)
+    start_dates = df[setup_mask].groupby("ID_Progetto")["Data_svolgimento"].min()
+
+    if start_dates.empty:
+        # fallback: prendo comunque la prima data di quel progetto
+        start_dates = df.groupby("ID_Progetto")["Data_svolgimento"].min()
+
+    return start_dates
+
+
+def build_pivot_progetti_colorati(df):
+    df_grouped = df.groupby(['ID_Progetto', 'Data_svolgimento']).apply(
+        lambda g: get_color_by_stato(g, progetto_id=g['ID_Progetto'].iloc[0])
+    ).reset_index(name='Colore')
+
+    all_dates = pd.date_range('2025-01-01', '2026-05-10', freq='D')
+    pivot = df_grouped.pivot(
+        index='ID_Progetto', columns='Data_svolgimento', values='Colore'
+    ).reindex(columns=all_dates, fill_value='')
+
+    # 🔽 ordinamento in base alla data di inizio progetto
+    start_dates = get_project_start_dates(df)
+    pivot = pivot.reindex(start_dates.sort_values().index)
+    return pivot
+
+
+
 
 
 def extract_text(html_content):
@@ -309,8 +338,6 @@ def build_rich_tooltip_from_df(df_source, index_col, idx_value, day_ts, split_co
             parts.append(f"<div class='tt-row' style='font-family:monospace;'>{html.escape(line)}</div>")
 
     return "<div class='tt-wrap'>" + "".join(parts) + "</div>"
-
-
 
 def render_html_table(pivot_df, index_name, table_id, df_source, index_col, split_comma=False, ordine_first_col=None):
     html_code = f'''
@@ -522,6 +549,115 @@ def render_html_table(pivot_df, index_name, table_id, df_source, index_col, spli
     '''
     return html_code
 
+def render_html_table_colored(pivot_df, index_name, table_id):
+    html_code = '''
+    <style>
+      .table-wrapper {
+        overflow-x: auto;
+        max-height: 700px;
+        border: 1px solid #ddd;
+        position: relative;
+        width: 100%;
+      }
+      table {
+        border-collapse: collapse;
+        width: auto;
+        min-width: 5000px;
+      }
+      table tr:first-child th {
+        position: sticky;
+        top: 0;
+        background: #f9f9f9;
+        z-index: 5;
+      }
+      th, td {
+        width: 20px;
+        max-width: 20px;
+        min-width: 20px;
+        border:1px solid #ddd;
+        padding:0;
+        font-size: 12px;
+        font-family: "Segoe UI", Arial, sans-serif;
+      }
+      th:first-child, td:first-child {
+        position: sticky;
+        left: 0;
+        background: #f9f9f9;
+        z-index: 2;
+        font-size: 11px;
+        width: 200px;
+        min-width: 200px;
+        max-width: 200px;
+        font-weight: bold;
+      }
+      th:first-child { z-index: 3; }
+      .today-col { background-color: #fff3cd !important; }
+      .weekend-col { background-color: #e0e0e0 !important; }
+      .holiday-col { background-color: #ffcccc !important; }
+      .button-container {
+        margin: 10px 0;
+        text-align: right;
+      }
+      .goto-today {
+        padding: 6px 12px;
+        font-size: 12px;
+        cursor: pointer;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+      }
+      .goto-today:hover { background-color: #0056b3; }
+    </style>
+
+    <div class="button-container">
+      <button class="goto-today" onclick="goToToday()">Vai ad oggi</button>
+    </div>
+
+    <div class="table-wrapper" id="''' + table_id + '''" tabindex="0">
+    <table>
+      <tr>
+        <th>''' + index_name + '''</th>'''
+
+    for col in pivot_df.columns:
+        classes = []
+        if col == oggi: classes.append("today-col")
+        if col.weekday() >= 5: classes.append("weekend-col")
+        if col in giorni_festivi: classes.append("holiday-col")
+        class_attr = " ".join(classes)
+        html_code += f'<th class="{class_attr}">{col.strftime("%d/%m/%y")}</th>'
+    html_code += '</tr>'
+
+    for idx, row in pivot_df.iterrows():
+        html_code += f'<tr><td>{idx}</td>'
+        for col in pivot_df.columns:
+            classes = []
+            if col == oggi: classes.append("today-col")
+            if col.weekday() >= 5: classes.append("weekend-col")
+            if col in giorni_festivi: classes.append("holiday-col")
+            class_attr = " ".join(classes)
+
+            colore = row[col] if row[col] else ""
+            style = f' style="background-color:{colore}"' if colore else ""
+            html_code += f'<td class="{class_attr}"{style}></td>'
+        html_code += '</tr>'
+
+    html_code += '''
+    </table></div>
+
+    <script>
+    function goToToday() {
+      var tableWrapper = document.getElementById("''' + table_id + '''");
+      var todayCol = tableWrapper.querySelector(".today-col");
+      if(todayCol){
+        tableWrapper.scrollLeft = todayCol.offsetLeft - tableWrapper.offsetWidth/2 + todayCol.offsetWidth/2;
+      }
+    }
+    </script>
+    '''
+    return html_code
+
+
 
 
 # --- Costruzione e visualizzazione tabelle ---
@@ -532,7 +668,10 @@ pivot_piste = build_pivot(df, 'Pista', solo_id=True)
 pivot_te = build_pivot(df, 'TE', solo_id=True, split_comma=True)
 
 # --- Selezione scheda ---
-scheda = st.selectbox("Seleziona scheda", ["Gantt Progetti", "Gantt Piste", "Gantt TE", "Statistiche giornaliere"])
+scheda = st.selectbox(
+    "Seleziona scheda",
+    ["Gantt Progetti", "Riassunto Progetti", "Gantt Piste", "Gantt TE", "Statistiche giornaliere"]
+)
 
 if scheda == "Gantt Progetti":
     from streamlit.components.v1 import html as components_html
@@ -557,6 +696,16 @@ elif scheda == "Gantt TE":
                           df_source=df, index_col="TE", split_comma=True),
         height=900, scrolling=True
     )
+
+elif scheda == "Riassunto Progetti":
+    pivot_progetti_colorati = build_pivot_progetti_colorati(df)
+    from streamlit.components.v1 import html as components_html
+    components_html(
+        render_html_table_colored(pivot_progetti_colorati, "Progetto", "tableProgettiColorati"),
+        height=900, scrolling=True
+    )
+
+
 
 elif scheda == "Statistiche giornaliere":
     import altair as alt
@@ -597,6 +746,10 @@ elif scheda == "Statistiche giornaliere":
             st.write(f"- {p}")
     else:
         st.write("Nessun progetto per questa data.")
+
+
+
+
 
 
 
